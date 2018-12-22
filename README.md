@@ -1,2 +1,1 @@
 # Simple Docker Registry Frontend
-
