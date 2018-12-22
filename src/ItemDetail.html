@@ -1,0 +1,52 @@
+<!-- Fire `select` event on click to go back. -->
+<span class='button' on:click="fire('select', null)" style="font-weight: bolder">←</span>
+
+<table class="u-full-width">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Tag</th>
+      <th>Created at</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {#if tags}
+    {#each tags as tag}
+    <Tag {tag} {repository_name} />
+    {/each}
+    {:else}
+    loading tags...
+    {/if}
+  </tbody>
+
+</table>
+
+<script>
+  import Tag from './Tag.html'
+
+  export default {
+    components: {
+      Tag
+    },
+
+    // Default values
+    data() {
+      return {
+        tags: null
+      };
+    },
+
+    // Initialization function
+    async oncreate() {
+      const { repository_name } = this.get();
+      const response = await fetch(`/v2/` + repository_name + '/tags/list').then(r => r.json());
+
+      // Set values to component
+      this.set({
+        tags: response.tags,
+        repository_name: repository_name
+      });
+    }
+  }
+</script>

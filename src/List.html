@@ -1,0 +1,44 @@
+	<table class="u-full-width">
+		<thead>
+			<tr>
+				<th>Repository Name</th>
+				<th>Image Name</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			{#if items}
+			{#each items as repository_name}
+
+			<!-- Forward select event from ItemRow back to App component -->
+			<ItemRow on:select="fire('select', { repository_name })" {registry_origin} {repository_name} />
+			{/each}
+			{:else}
+			<p class='loading'>loading images...</p>
+			{/if}
+		</tbody>
+	</table>
+
+<script>
+	import ItemRow from './ItemRow.html'
+	export default {
+		components: {
+			ItemRow
+		},
+		data() {
+			return {
+				items: null,
+				registry_origin: null
+			};
+		},
+		async oncreate() {
+			var item = null;
+			var registry_origin = null;
+			const response = await fetch(`/v2/_catalog`).then(r => r.json());
+			this.set({
+				registry_origin: window.location.host,
+				items: response.repositories
+			})
+		},
+	};
+</script>

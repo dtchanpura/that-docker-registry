@@ -1,0 +1,50 @@
+<svelte:head>
+	<title>{app_title}</title>
+</svelte:head>
+
+<div class="container">
+	<div class="row">
+		<div class="six columns">
+			<h1>{name}</h1>
+		</div>
+		<div class="six columns">
+			<h2>{subtitle}</h2>
+		</div>
+	</div>
+	<div class="row">
+		{#if isList}
+		<!-- This is the list view for listing all repositories -->
+		<List on:select="itemDetails(event.repository_name)" />
+		{:else}
+		<!-- This is the image detail view for giving more details about images -->
+		<ItemDetail on:select="close()" {repository_name} />
+		{/if}
+	</div>
+</div>
+
+
+<style>
+</style>
+<script>
+	import List from './List.html';
+	import ItemDetail from './ItemDetail.html';
+
+	export default {
+		components: { List, ItemDetail },
+		methods: {
+			// This is a simple router which changes view based on isList variable
+			itemDetails(item) {
+				console.log(item);
+				this.set({
+					isList: false,
+					repository_name: item
+				});
+			},
+			close() {
+				this.set({
+					isList: true
+				})
+			}
+		}
+	}
+	</script>
