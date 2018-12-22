@@ -1,0 +1,1435 @@
+var app = (function () {
+	'use strict';
+
+	function noop() {}
+
+	function assign(tar, src) {
+		for (var k in src) tar[k] = src[k];
+		return tar;
+	}
+
+	function assignTrue(tar, src) {
+		for (var k in src) tar[k] = 1;
+		return tar;
+	}
+
+	function callAfter(fn, i) {
+		if (i === 0) fn();
+		return () => {
+			if (!--i) fn();
+		};
+	}
+
+	function addLoc(element, file, line, column, char) {
+		element.__svelte_meta = {
+			loc: { file, line, column, char }
+		};
+	}
+
+	function run(fn) {
+		fn();
+	}
+
+	function append(target, node) {
+		target.appendChild(node);
+	}
+
+	function insert(target, node, anchor) {
+		target.insertBefore(node, anchor);
+	}
+
+	function detachNode(node) {
+		node.parentNode.removeChild(node);
+	}
+
+	function destroyEach(iterations, detach) {
+		for (var i = 0; i < iterations.length; i += 1) {
+			if (iterations[i]) iterations[i].d(detach);
+		}
+	}
+
+	function createElement(name) {
+		return document.createElement(name);
+	}
+
+	function createText(data) {
+		return document.createTextNode(data);
+	}
+
+	function createComment() {
+		return document.createComment('');
+	}
+
+	function addListener(node, event, handler, options) {
+		node.addEventListener(event, handler, options);
+	}
+
+	function removeListener(node, event, handler, options) {
+		node.removeEventListener(event, handler, options);
+	}
+
+	function setData(text, data) {
+		text.data = '' + data;
+	}
+
+	function setStyle(node, key, value) {
+		node.style.setProperty(key, value);
+	}
+
+	function blankObject() {
+		return Object.create(null);
+	}
+
+	function destroy(detach) {
+		this.destroy = noop;
+		this.fire('destroy');
+		this.set = noop;
+
+		this._fragment.d(detach !== false);
+		this._fragment = null;
+		this._state = {};
+	}
+
+	function destroyDev(detach) {
+		destroy.call(this, detach);
+		this.destroy = function() {
+			console.warn('Component was already destroyed');
+		};
+	}
+
+	function _differs(a, b) {
+		return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+	}
+
+	function fire(eventName, data) {
+		var handlers =
+			eventName in this._handlers && this._handlers[eventName].slice();
+		if (!handlers) return;
+
+		for (var i = 0; i < handlers.length; i += 1) {
+			var handler = handlers[i];
+
+			if (!handler.__calling) {
+				try {
+					handler.__calling = true;
+					handler.call(this, data);
+				} finally {
+					handler.__calling = false;
+				}
+			}
+		}
+	}
+
+	function flush(component) {
+		component._lock = true;
+		callAll(component._beforecreate);
+		callAll(component._oncreate);
+		callAll(component._aftercreate);
+		component._lock = false;
+	}
+
+	function get() {
+		return this._state;
+	}
+
+	function init(component, options) {
+		component._handlers = blankObject();
+		component._slots = blankObject();
+		component._bind = options._bind;
+		component._staged = {};
+
+		component.options = options;
+		component.root = options.root || component;
+		component.store = options.store || component.root.store;
+
+		if (!options.root) {
+			component._beforecreate = [];
+			component._oncreate = [];
+			component._aftercreate = [];
+		}
+	}
+
+	function on(eventName, handler) {
+		var handlers = this._handlers[eventName] || (this._handlers[eventName] = []);
+		handlers.push(handler);
+
+		return {
+			cancel: function() {
+				var index = handlers.indexOf(handler);
+				if (~index) handlers.splice(index, 1);
+			}
+		};
+	}
+
+	function set(newState) {
+		this._set(assign({}, newState));
+		if (this.root._lock) return;
+		flush(this.root);
+	}
+
+	function _set(newState) {
+		var oldState = this._state,
+			changed = {},
+			dirty = false;
+
+		newState = assign(this._staged, newState);
+		this._staged = {};
+
+		for (var key in newState) {
+			if (this._differs(newState[key], oldState[key])) changed[key] = dirty = true;
+		}
+		if (!dirty) return;
+
+		this._state = assign(assign({}, oldState), newState);
+		this._recompute(changed, this._state);
+		if (this._bind) this._bind(changed, this._state);
+
+		if (this._fragment) {
+			this.fire("state", { changed: changed, current: this._state, previous: oldState });
+			this._fragment.p(changed, this._state);
+			this.fire("update", { changed: changed, current: this._state, previous: oldState });
+		}
+	}
+
+	function _stage(newState) {
+		assign(this._staged, newState);
+	}
+
+	function setDev(newState) {
+		if (typeof newState !== 'object') {
+			throw new Error(
+				this._debugName + '.set was called without an object of data key-values to update.'
+			);
+		}
+
+		this._checkReadOnly(newState);
+		set.call(this, newState);
+	}
+
+	function callAll(fns) {
+		while (fns && fns.length) fns.shift()();
+	}
+
+	function _mount(target, anchor) {
+		this._fragment[this._fragment.i ? 'i' : 'm'](target, anchor || null);
+	}
+
+	var protoDev = {
+		destroy: destroyDev,
+		get,
+		fire,
+		on,
+		set: setDev,
+		_recompute: noop,
+		_set,
+		_stage,
+		_mount,
+		_differs
+	};
+
+	/* src/ItemRow.html generated by Svelte v2.16.0 */
+
+	const file = "src/ItemRow.html";
+
+	function create_main_fragment(component, ctx) {
+		var tr, td0, text0, text1, td1, code, text2, text3, text4, current;
+
+		function click_handler(event) {
+			component.fire('select', { repository_name: ctx.repository_name });
+		}
+
+		return {
+			c: function create() {
+				tr = createElement("tr");
+				td0 = createElement("td");
+				text0 = createText(ctx.repository_name);
+				text1 = createText("\n  ");
+				td1 = createElement("td");
+				code = createElement("code");
+				text2 = createText(ctx.registry_origin);
+				text3 = createText("/");
+				text4 = createText(ctx.repository_name);
+				addListener(td0, "click", click_handler);
+				addLoc(td0, file, 1, 2, 7);
+				addLoc(code, file, 2, 6, 87);
+				addLoc(td1, file, 2, 2, 83);
+				addLoc(tr, file, 0, 0, 0);
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, tr, anchor);
+				append(tr, td0);
+				append(td0, text0);
+				append(tr, text1);
+				append(tr, td1);
+				append(td1, code);
+				append(code, text2);
+				append(code, text3);
+				append(code, text4);
+				current = true;
+			},
+
+			p: function update(changed, _ctx) {
+				ctx = _ctx;
+				if (changed.repository_name) {
+					setData(text0, ctx.repository_name);
+				}
+
+				if (changed.registry_origin) {
+					setData(text2, ctx.registry_origin);
+				}
+
+				if (changed.repository_name) {
+					setData(text4, ctx.repository_name);
+				}
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: run,
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(tr);
+				}
+
+				removeListener(td0, "click", click_handler);
+			}
+		};
+	}
+
+	function ItemRow(options) {
+		this._debugName = '<ItemRow>';
+		if (!options || (!options.target && !options.root)) {
+			throw new Error("'target' is a required option");
+		}
+
+		init(this, options);
+		this._state = assign({}, options.data);
+		if (!('repository_name' in this._state)) console.warn("<ItemRow> was created without expected data property 'repository_name'");
+		if (!('registry_origin' in this._state)) console.warn("<ItemRow> was created without expected data property 'registry_origin'");
+		this._intro = !!options.intro;
+
+		this._fragment = create_main_fragment(this, this._state);
+
+		if (options.target) {
+			if (options.hydrate) throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+			this._fragment.c();
+			this._mount(options.target, options.anchor);
+		}
+
+		this._intro = true;
+	}
+
+	assign(ItemRow.prototype, protoDev);
+
+	ItemRow.prototype._checkReadOnly = function _checkReadOnly(newState) {
+	};
+
+	/* src/List.html generated by Svelte v2.16.0 */
+
+	function data() {
+		return {
+			items: null,
+			registry_origin: null
+		};
+	}
+	async function oncreate() {
+		const response = await fetch(`/v2/_catalog`).then(r => r.json());
+		this.set({
+			registry_origin: window.location.host,
+			items: response.repositories
+		});
+	}
+	const file$1 = "src/List.html";
+
+	function get_each_context(ctx, list, i) {
+		const child_ctx = Object.create(ctx);
+		child_ctx.repository_name = list[i];
+		return child_ctx;
+	}
+
+	function create_main_fragment$1(component, ctx) {
+		var table, thead, tr, th0, text1, th1, text3, tbody, current_block_type_index, if_block, current;
+
+		var if_block_creators = [
+			create_if_block,
+			create_else_block
+		];
+
+		var if_blocks = [];
+
+		function select_block_type(ctx) {
+			if (ctx.items) return 0;
+			return 1;
+		}
+
+		current_block_type_index = select_block_type(ctx);
+		if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](component, ctx);
+
+		return {
+			c: function create() {
+				table = createElement("table");
+				thead = createElement("thead");
+				tr = createElement("tr");
+				th0 = createElement("th");
+				th0.textContent = "Repository Name";
+				text1 = createText("\n\t\t\t\t");
+				th1 = createElement("th");
+				th1.textContent = "Image Name";
+				text3 = createText("\n\n\t\t");
+				tbody = createElement("tbody");
+				if_block.c();
+				addLoc(th0, file$1, 3, 4, 52);
+				addLoc(th1, file$1, 4, 4, 81);
+				addLoc(tr, file$1, 2, 3, 43);
+				addLoc(thead, file$1, 1, 2, 32);
+				addLoc(tbody, file$1, 8, 2, 124);
+				table.className = "u-full-width";
+				addLoc(table, file$1, 0, 1, 1);
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, table, anchor);
+				append(table, thead);
+				append(thead, tr);
+				append(tr, th0);
+				append(tr, text1);
+				append(tr, th1);
+				append(table, text3);
+				append(table, tbody);
+				if_blocks[current_block_type_index].m(tbody, null);
+				current = true;
+			},
+
+			p: function update(changed, ctx) {
+				var previous_block_index = current_block_type_index;
+				current_block_type_index = select_block_type(ctx);
+				if (current_block_type_index === previous_block_index) {
+					if_blocks[current_block_type_index].p(changed, ctx);
+				} else {
+					if_block.o(function() {
+						if_blocks[previous_block_index].d(1);
+						if_blocks[previous_block_index] = null;
+					});
+
+					if_block = if_blocks[current_block_type_index];
+					if (!if_block) {
+						if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](component, ctx);
+						if_block.c();
+					}
+					if_block.m(tbody, null);
+				}
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				if (if_block) if_block.o(outrocallback);
+				else outrocallback();
+
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(table);
+				}
+
+				if_blocks[current_block_type_index].d();
+			}
+		};
+	}
+
+	// (16:3) {:else}
+	function create_else_block(component, ctx) {
+		var p, current;
+
+		return {
+			c: function create() {
+				p = createElement("p");
+				p.textContent = "loading images...";
+				p.className = "loading";
+				addLoc(p, file$1, 16, 3, 376);
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, p, anchor);
+				current = true;
+			},
+
+			p: noop,
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: run,
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(p);
+				}
+			}
+		};
+	}
+
+	// (10:3) {#if items}
+	function create_if_block(component, ctx) {
+		var each_anchor, current;
+
+		var each_value = ctx.items;
+
+		var each_blocks = [];
+
+		for (var i = 0; i < each_value.length; i += 1) {
+			each_blocks[i] = create_each_block(component, get_each_context(ctx, each_value, i));
+		}
+
+		function outroBlock(i, detach, fn) {
+			if (each_blocks[i]) {
+				each_blocks[i].o(() => {
+					if (detach) {
+						each_blocks[i].d(detach);
+						each_blocks[i] = null;
+					}
+					if (fn) fn();
+				});
+			}
+		}
+
+		return {
+			c: function create() {
+				for (var i = 0; i < each_blocks.length; i += 1) {
+					each_blocks[i].c();
+				}
+
+				each_anchor = createComment();
+			},
+
+			m: function mount(target, anchor) {
+				for (var i = 0; i < each_blocks.length; i += 1) {
+					each_blocks[i].i(target, anchor);
+				}
+
+				insert(target, each_anchor, anchor);
+				current = true;
+			},
+
+			p: function update(changed, ctx) {
+				if (changed.registry_origin || changed.items) {
+					each_value = ctx.items;
+
+					for (var i = 0; i < each_value.length; i += 1) {
+						const child_ctx = get_each_context(ctx, each_value, i);
+
+						if (each_blocks[i]) {
+							each_blocks[i].p(changed, child_ctx);
+						} else {
+							each_blocks[i] = create_each_block(component, child_ctx);
+							each_blocks[i].c();
+						}
+						each_blocks[i].i(each_anchor.parentNode, each_anchor);
+					}
+					for (; i < each_blocks.length; i += 1) outroBlock(i, 1);
+				}
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				each_blocks = each_blocks.filter(Boolean);
+				const countdown = callAfter(outrocallback, each_blocks.length);
+				for (let i = 0; i < each_blocks.length; i += 1) outroBlock(i, 0, countdown);
+
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				destroyEach(each_blocks, detach);
+
+				if (detach) {
+					detachNode(each_anchor);
+				}
+			}
+		};
+	}
+
+	// (11:3) {#each items as repository_name}
+	function create_each_block(component, ctx) {
+		var current;
+
+		var itemrow_initial_data = {
+		 	registry_origin: ctx.registry_origin,
+		 	repository_name: ctx.repository_name
+		 };
+		var itemrow = new ItemRow({
+			root: component.root,
+			store: component.store,
+			data: itemrow_initial_data
+		});
+
+		itemrow.on("select", function(event) {
+			component.fire('select', { repository_name: ctx.repository_name });
+		});
+
+		return {
+			c: function create() {
+				itemrow._fragment.c();
+			},
+
+			m: function mount(target, anchor) {
+				itemrow._mount(target, anchor);
+				current = true;
+			},
+
+			p: function update(changed, _ctx) {
+				ctx = _ctx;
+				var itemrow_changes = {};
+				if (changed.registry_origin) itemrow_changes.registry_origin = ctx.registry_origin;
+				if (changed.items) itemrow_changes.repository_name = ctx.repository_name;
+				itemrow._set(itemrow_changes);
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				if (itemrow) itemrow._fragment.o(outrocallback);
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				itemrow.destroy(detach);
+			}
+		};
+	}
+
+	function List(options) {
+		this._debugName = '<List>';
+		if (!options || (!options.target && !options.root)) {
+			throw new Error("'target' is a required option");
+		}
+
+		init(this, options);
+		this._state = assign(data(), options.data);
+		if (!('items' in this._state)) console.warn("<List> was created without expected data property 'items'");
+		if (!('registry_origin' in this._state)) console.warn("<List> was created without expected data property 'registry_origin'");
+		this._intro = !!options.intro;
+
+		this._fragment = create_main_fragment$1(this, this._state);
+
+		this.root._oncreate.push(() => {
+			oncreate.call(this);
+			this.fire("update", { changed: assignTrue({}, this._state), current: this._state });
+		});
+
+		if (options.target) {
+			if (options.hydrate) throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+			this._fragment.c();
+			this._mount(options.target, options.anchor);
+
+			flush(this);
+		}
+
+		this._intro = true;
+	}
+
+	assign(List.prototype, protoDev);
+
+	List.prototype._checkReadOnly = function _checkReadOnly(newState) {
+	};
+
+	/* src/Tag.html generated by Svelte v2.16.0 */
+
+	function data$1() {
+	  return {
+	    created_at: new Date(0)
+	  }
+	}
+	async function oncreate$1() {
+	  const { tag, repository_name } = this.get();
+	  const responseMetadata = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
+	    "headers": {
+	      "Accept": "application/vnd.docker.distribution.manifest.v2+json"
+	    }
+	  }).then(r => r.json()).then(function(response) {
+	    return fetch('/v2/' + repository_name + '/blobs/' + response.config.digest, {
+	      "headers": {
+	        "Accept": response.config.mediaType
+	      }
+	    }).then(r => r.json());
+	  });
+	  this.set({
+	    created_at: new Date(responseMetadata.created)
+	  });
+	}
+	const file$2 = "src/Tag.html";
+
+	function create_main_fragment$2(component, ctx) {
+		var tr, td0, text0, text1, td1, code, text2, text3, td2, text4, current;
+
+		return {
+			c: function create() {
+				tr = createElement("tr");
+				td0 = createElement("td");
+				text0 = createText(ctx.repository_name);
+				text1 = createText("\n  ");
+				td1 = createElement("td");
+				code = createElement("code");
+				text2 = createText(ctx.tag);
+				text3 = createText("\n  ");
+				td2 = createElement("td");
+				text4 = createText(ctx.created_at);
+				addLoc(td0, file$2, 1, 2, 7);
+				addLoc(code, file$2, 2, 6, 42);
+				addLoc(td1, file$2, 2, 2, 38);
+				addLoc(td2, file$2, 3, 2, 70);
+				addLoc(tr, file$2, 0, 0, 0);
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, tr, anchor);
+				append(tr, td0);
+				append(td0, text0);
+				append(tr, text1);
+				append(tr, td1);
+				append(td1, code);
+				append(code, text2);
+				append(tr, text3);
+				append(tr, td2);
+				append(td2, text4);
+				current = true;
+			},
+
+			p: function update(changed, ctx) {
+				if (changed.repository_name) {
+					setData(text0, ctx.repository_name);
+				}
+
+				if (changed.tag) {
+					setData(text2, ctx.tag);
+				}
+
+				if (changed.created_at) {
+					setData(text4, ctx.created_at);
+				}
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: run,
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(tr);
+				}
+			}
+		};
+	}
+
+	function Tag(options) {
+		this._debugName = '<Tag>';
+		if (!options || (!options.target && !options.root)) {
+			throw new Error("'target' is a required option");
+		}
+
+		init(this, options);
+		this._state = assign(data$1(), options.data);
+		if (!('repository_name' in this._state)) console.warn("<Tag> was created without expected data property 'repository_name'");
+		if (!('tag' in this._state)) console.warn("<Tag> was created without expected data property 'tag'");
+		if (!('created_at' in this._state)) console.warn("<Tag> was created without expected data property 'created_at'");
+		this._intro = !!options.intro;
+
+		this._fragment = create_main_fragment$2(this, this._state);
+
+		this.root._oncreate.push(() => {
+			oncreate$1.call(this);
+			this.fire("update", { changed: assignTrue({}, this._state), current: this._state });
+		});
+
+		if (options.target) {
+			if (options.hydrate) throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+			this._fragment.c();
+			this._mount(options.target, options.anchor);
+
+			flush(this);
+		}
+
+		this._intro = true;
+	}
+
+	assign(Tag.prototype, protoDev);
+
+	Tag.prototype._checkReadOnly = function _checkReadOnly(newState) {
+	};
+
+	/* src/ItemDetail.html generated by Svelte v2.16.0 */
+
+	function data$2() {
+	  return {
+	    tags: null
+	  };
+	}
+	async function oncreate$2() {
+	  const { repository_name } = this.get();
+	  const response = await fetch(`/v2/` + repository_name + '/tags/list').then(r => r.json());
+
+	  // Set values to component
+	  this.set({
+	    tags: response.tags,
+	    repository_name: repository_name
+	  });
+	}
+	const file$3 = "src/ItemDetail.html";
+
+	function get_each_context$1(ctx, list, i) {
+		const child_ctx = Object.create(ctx);
+		child_ctx.tag = list[i];
+		return child_ctx;
+	}
+
+	function create_main_fragment$3(component, ctx) {
+		var span, text1, table, thead, tr, th0, text3, th1, text5, th2, text7, tbody, current_block_type_index, if_block, current;
+
+		function click_handler(event) {
+			component.fire('select', null);
+		}
+
+		var if_block_creators = [
+			create_if_block$1,
+			create_else_block$1
+		];
+
+		var if_blocks = [];
+
+		function select_block_type(ctx) {
+			if (ctx.tags) return 0;
+			return 1;
+		}
+
+		current_block_type_index = select_block_type(ctx);
+		if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](component, ctx);
+
+		return {
+			c: function create() {
+				span = createElement("span");
+				span.textContent = "←";
+				text1 = createText("\n\n");
+				table = createElement("table");
+				thead = createElement("thead");
+				tr = createElement("tr");
+				th0 = createElement("th");
+				th0.textContent = "Name";
+				text3 = createText("\n      ");
+				th1 = createElement("th");
+				th1.textContent = "Tag";
+				text5 = createText("\n      ");
+				th2 = createElement("th");
+				th2.textContent = "Created at";
+				text7 = createText("\n\n  ");
+				tbody = createElement("tbody");
+				if_block.c();
+				addListener(span, "click", click_handler);
+				span.className = "button";
+				setStyle(span, "font-weight", "bolder");
+				addLoc(span, file$3, 1, 0, 50);
+				addLoc(th0, file$3, 6, 6, 195);
+				addLoc(th1, file$3, 7, 6, 215);
+				addLoc(th2, file$3, 8, 6, 234);
+				addLoc(tr, file$3, 5, 4, 184);
+				addLoc(thead, file$3, 4, 2, 172);
+				addLoc(tbody, file$3, 12, 2, 278);
+				table.className = "u-full-width";
+				addLoc(table, file$3, 3, 0, 141);
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, span, anchor);
+				insert(target, text1, anchor);
+				insert(target, table, anchor);
+				append(table, thead);
+				append(thead, tr);
+				append(tr, th0);
+				append(tr, text3);
+				append(tr, th1);
+				append(tr, text5);
+				append(tr, th2);
+				append(table, text7);
+				append(table, tbody);
+				if_blocks[current_block_type_index].m(tbody, null);
+				current = true;
+			},
+
+			p: function update(changed, ctx) {
+				var previous_block_index = current_block_type_index;
+				current_block_type_index = select_block_type(ctx);
+				if (current_block_type_index === previous_block_index) {
+					if_blocks[current_block_type_index].p(changed, ctx);
+				} else {
+					if_block.o(function() {
+						if_blocks[previous_block_index].d(1);
+						if_blocks[previous_block_index] = null;
+					});
+
+					if_block = if_blocks[current_block_type_index];
+					if (!if_block) {
+						if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](component, ctx);
+						if_block.c();
+					}
+					if_block.m(tbody, null);
+				}
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				if (if_block) if_block.o(outrocallback);
+				else outrocallback();
+
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(span);
+				}
+
+				removeListener(span, "click", click_handler);
+				if (detach) {
+					detachNode(text1);
+					detachNode(table);
+				}
+
+				if_blocks[current_block_type_index].d();
+			}
+		};
+	}
+
+	// (18:4) {:else}
+	function create_else_block$1(component, ctx) {
+		var text, current;
+
+		return {
+			c: function create() {
+				text = createText("loading tags...");
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, text, anchor);
+				current = true;
+			},
+
+			p: noop,
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: run,
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(text);
+				}
+			}
+		};
+	}
+
+	// (14:4) {#if tags}
+	function create_if_block$1(component, ctx) {
+		var each_anchor, current;
+
+		var each_value = ctx.tags;
+
+		var each_blocks = [];
+
+		for (var i = 0; i < each_value.length; i += 1) {
+			each_blocks[i] = create_each_block$1(component, get_each_context$1(ctx, each_value, i));
+		}
+
+		function outroBlock(i, detach, fn) {
+			if (each_blocks[i]) {
+				each_blocks[i].o(() => {
+					if (detach) {
+						each_blocks[i].d(detach);
+						each_blocks[i] = null;
+					}
+					if (fn) fn();
+				});
+			}
+		}
+
+		return {
+			c: function create() {
+				for (var i = 0; i < each_blocks.length; i += 1) {
+					each_blocks[i].c();
+				}
+
+				each_anchor = createComment();
+			},
+
+			m: function mount(target, anchor) {
+				for (var i = 0; i < each_blocks.length; i += 1) {
+					each_blocks[i].i(target, anchor);
+				}
+
+				insert(target, each_anchor, anchor);
+				current = true;
+			},
+
+			p: function update(changed, ctx) {
+				if (changed.tags || changed.repository_name) {
+					each_value = ctx.tags;
+
+					for (var i = 0; i < each_value.length; i += 1) {
+						const child_ctx = get_each_context$1(ctx, each_value, i);
+
+						if (each_blocks[i]) {
+							each_blocks[i].p(changed, child_ctx);
+						} else {
+							each_blocks[i] = create_each_block$1(component, child_ctx);
+							each_blocks[i].c();
+						}
+						each_blocks[i].i(each_anchor.parentNode, each_anchor);
+					}
+					for (; i < each_blocks.length; i += 1) outroBlock(i, 1);
+				}
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				each_blocks = each_blocks.filter(Boolean);
+				const countdown = callAfter(outrocallback, each_blocks.length);
+				for (let i = 0; i < each_blocks.length; i += 1) outroBlock(i, 0, countdown);
+
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				destroyEach(each_blocks, detach);
+
+				if (detach) {
+					detachNode(each_anchor);
+				}
+			}
+		};
+	}
+
+	// (15:4) {#each tags as tag}
+	function create_each_block$1(component, ctx) {
+		var current;
+
+		var tag_initial_data = {
+		 	tag: ctx.tag,
+		 	repository_name: ctx.repository_name
+		 };
+		var tag = new Tag({
+			root: component.root,
+			store: component.store,
+			data: tag_initial_data
+		});
+
+		return {
+			c: function create() {
+				tag._fragment.c();
+			},
+
+			m: function mount(target, anchor) {
+				tag._mount(target, anchor);
+				current = true;
+			},
+
+			p: function update(changed, ctx) {
+				var tag_changes = {};
+				if (changed.tags) tag_changes.tag = ctx.tag;
+				if (changed.repository_name) tag_changes.repository_name = ctx.repository_name;
+				tag._set(tag_changes);
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				if (tag) tag._fragment.o(outrocallback);
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				tag.destroy(detach);
+			}
+		};
+	}
+
+	function ItemDetail(options) {
+		this._debugName = '<ItemDetail>';
+		if (!options || (!options.target && !options.root)) {
+			throw new Error("'target' is a required option");
+		}
+
+		init(this, options);
+		this._state = assign(data$2(), options.data);
+		if (!('tags' in this._state)) console.warn("<ItemDetail> was created without expected data property 'tags'");
+		if (!('repository_name' in this._state)) console.warn("<ItemDetail> was created without expected data property 'repository_name'");
+		this._intro = !!options.intro;
+
+		this._fragment = create_main_fragment$3(this, this._state);
+
+		this.root._oncreate.push(() => {
+			oncreate$2.call(this);
+			this.fire("update", { changed: assignTrue({}, this._state), current: this._state });
+		});
+
+		if (options.target) {
+			if (options.hydrate) throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+			this._fragment.c();
+			this._mount(options.target, options.anchor);
+
+			flush(this);
+		}
+
+		this._intro = true;
+	}
+
+	assign(ItemDetail.prototype, protoDev);
+
+	ItemDetail.prototype._checkReadOnly = function _checkReadOnly(newState) {
+	};
+
+	/* src/App.html generated by Svelte v2.16.0 */
+
+
+
+	var methods = {
+		// This is a simple router which changes view based on isList variable
+		itemDetails(item) {
+			console.log(item);
+			this.set({
+				isList: false,
+				repository_name: item
+			});
+		},
+		close() {
+			this.set({
+				isList: true
+			});
+		}
+	};
+
+	const file$4 = "src/App.html";
+
+	function create_main_fragment$4(component, ctx) {
+		var title_value, text0, div4, div2, div0, h1, text1, text2, div1, h2, text3, text4, div3, current_block_type_index, if_block, current;
+
+		document.title = title_value = ctx.app_title;
+
+		var if_block_creators = [
+			create_if_block$2,
+			create_else_block$2
+		];
+
+		var if_blocks = [];
+
+		function select_block_type(ctx) {
+			if (ctx.isList) return 0;
+			return 1;
+		}
+
+		current_block_type_index = select_block_type(ctx);
+		if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](component, ctx);
+
+		return {
+			c: function create() {
+				text0 = createText("\n\n");
+				div4 = createElement("div");
+				div2 = createElement("div");
+				div0 = createElement("div");
+				h1 = createElement("h1");
+				text1 = createText(ctx.name);
+				text2 = createText("\n\t\t");
+				div1 = createElement("div");
+				h2 = createElement("h2");
+				text3 = createText(ctx.subtitle);
+				text4 = createText("\n\t");
+				div3 = createElement("div");
+				if_block.c();
+				addLoc(h1, file$4, 7, 3, 132);
+				div0.className = "six columns";
+				addLoc(div0, file$4, 6, 2, 103);
+				addLoc(h2, file$4, 10, 3, 188);
+				div1.className = "six columns";
+				addLoc(div1, file$4, 9, 2, 159);
+				div2.className = "row";
+				addLoc(div2, file$4, 5, 1, 83);
+				div3.className = "row";
+				addLoc(div3, file$4, 13, 1, 226);
+				div4.className = "container";
+				addLoc(div4, file$4, 4, 0, 58);
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, text0, anchor);
+				insert(target, div4, anchor);
+				append(div4, div2);
+				append(div2, div0);
+				append(div0, h1);
+				append(h1, text1);
+				append(div2, text2);
+				append(div2, div1);
+				append(div1, h2);
+				append(h2, text3);
+				append(div4, text4);
+				append(div4, div3);
+				if_blocks[current_block_type_index].m(div3, null);
+				current = true;
+			},
+
+			p: function update(changed, ctx) {
+				if ((!current || changed.app_title) && title_value !== (title_value = ctx.app_title)) {
+					document.title = title_value;
+				}
+
+				if (!current || changed.name) {
+					setData(text1, ctx.name);
+				}
+
+				if (!current || changed.subtitle) {
+					setData(text3, ctx.subtitle);
+				}
+
+				var previous_block_index = current_block_type_index;
+				current_block_type_index = select_block_type(ctx);
+				if (current_block_type_index === previous_block_index) {
+					if_blocks[current_block_type_index].p(changed, ctx);
+				} else {
+					if_block.o(function() {
+						if_blocks[previous_block_index].d(1);
+						if_blocks[previous_block_index] = null;
+					});
+
+					if_block = if_blocks[current_block_type_index];
+					if (!if_block) {
+						if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](component, ctx);
+						if_block.c();
+					}
+					if_block.m(div3, null);
+				}
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				if (if_block) if_block.o(outrocallback);
+				else outrocallback();
+
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(text0);
+					detachNode(div4);
+				}
+
+				if_blocks[current_block_type_index].d();
+			}
+		};
+	}
+
+	// (18:2) {:else}
+	function create_else_block$2(component, ctx) {
+		var current;
+
+		var itemdetail_initial_data = { repository_name: ctx.repository_name };
+		var itemdetail = new ItemDetail({
+			root: component.root,
+			store: component.store,
+			data: itemdetail_initial_data
+		});
+
+		itemdetail.on("select", function(event) {
+			component.close();
+		});
+
+		return {
+			c: function create() {
+				itemdetail._fragment.c();
+			},
+
+			m: function mount(target, anchor) {
+				itemdetail._mount(target, anchor);
+				current = true;
+			},
+
+			p: function update(changed, ctx) {
+				var itemdetail_changes = {};
+				if (changed.repository_name) itemdetail_changes.repository_name = ctx.repository_name;
+				itemdetail._set(itemdetail_changes);
+			},
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				if (itemdetail) itemdetail._fragment.o(outrocallback);
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				itemdetail.destroy(detach);
+			}
+		};
+	}
+
+	// (15:2) {#if isList}
+	function create_if_block$2(component, ctx) {
+		var current;
+
+		var list = new List({
+			root: component.root,
+			store: component.store
+		});
+
+		list.on("select", function(event) {
+			component.itemDetails(event.repository_name);
+		});
+
+		return {
+			c: function create() {
+				list._fragment.c();
+			},
+
+			m: function mount(target, anchor) {
+				list._mount(target, anchor);
+				current = true;
+			},
+
+			p: noop,
+
+			i: function intro(target, anchor) {
+				if (current) return;
+
+				this.m(target, anchor);
+			},
+
+			o: function outro(outrocallback) {
+				if (!current) return;
+
+				if (list) list._fragment.o(outrocallback);
+				current = false;
+			},
+
+			d: function destroy$$1(detach) {
+				list.destroy(detach);
+			}
+		};
+	}
+
+	function App(options) {
+		this._debugName = '<App>';
+		if (!options || (!options.target && !options.root)) {
+			throw new Error("'target' is a required option");
+		}
+
+		init(this, options);
+		this._state = assign({}, options.data);
+		if (!('app_title' in this._state)) console.warn("<App> was created without expected data property 'app_title'");
+		if (!('name' in this._state)) console.warn("<App> was created without expected data property 'name'");
+		if (!('subtitle' in this._state)) console.warn("<App> was created without expected data property 'subtitle'");
+		if (!('isList' in this._state)) console.warn("<App> was created without expected data property 'isList'");
+		if (!('repository_name' in this._state)) console.warn("<App> was created without expected data property 'repository_name'");
+		this._intro = !!options.intro;
+
+		this._fragment = create_main_fragment$4(this, this._state);
+
+		if (options.target) {
+			if (options.hydrate) throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+			this._fragment.c();
+			this._mount(options.target, options.anchor);
+
+			flush(this);
+		}
+
+		this._intro = true;
+	}
+
+	assign(App.prototype, protoDev);
+	assign(App.prototype, methods);
+
+	App.prototype._checkReadOnly = function _checkReadOnly(newState) {
+	};
+
+	const app = new App({
+		target: document.body,
+		data: {
+			name: 'That Docker Registry',
+			subtitle: '',
+			item: null,
+			isList: true,
+			app_title: "That Docker Registry",
+			repository_name: null
+		}
+	});
+
+	return app;
+
+}());
+//# sourceMappingURL=bundle.js.map
