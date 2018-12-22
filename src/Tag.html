@@ -1,31 +1,42 @@
 <tr>
+  {#if tag}
+  <td>{ tag.repository_name }</td>
+  <td><code>{ tag.tag_name }</code></td>
+  <td>{ tag.created_at }</td>
+  {:else}
+  <td>...</td>
+  {/if}
+</tr>
+<!-- <tr>
   <td>{ repository_name }</td>
   <td><code>{ tag }</code></td>
   <td>{ created_at }</td>
-</tr>
+</tr> -->
 
 <script>
   export default {
     data() {
       return {
-        created_at: new Date(0)
+        tag: null
       }
     },
     async oncreate() {
-      const { tag, repository_name } = this.get();
-      const responseMetadata = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
-        "headers": {
-          "Accept": "application/vnd.docker.distribution.manifest.v2+json"
-        }
-      }).then(r => r.json()).then(function(response) {
-        return fetch('/v2/' + repository_name + '/blobs/' + response.config.digest, {
-          "headers": {
-            "Accept": response.config.mediaType
-          }
-        }).then(r => r.json());
-      });
+      const { tag } = this.get();
+      // const { tag, repository_name } = this.get();
+      // const responseMetadata = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
+      //   "headers": {
+      //     "Accept": "application/vnd.docker.distribution.manifest.v2+json"
+      //   }
+      // }).then(r => r.json()).then(function(response) {
+      //   return fetch('/v2/' + repository_name + '/blobs/' + response.config.digest, {
+      //     "headers": {
+      //       "Accept": response.config.mediaType
+      //     }
+      //   }).then(r => r.json());
+      // });
       this.set({
-        created_at: new Date(responseMetadata.created)
+        tag
+        // created_at: new Date(responseMetadata.created)
       })
     }
   }

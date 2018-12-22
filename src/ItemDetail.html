@@ -13,10 +13,15 @@
   <tbody>
     {#if tags}
     {#each tags as tag}
-    <Tag {tag} {repository_name} />
+    <Tag {tag} />
+    <!-- <Tag {tag} {repository_name} /> -->
     {/each}
     {:else}
-    loading tags...
+    <tr>
+      <td>loading tags...</td>
+      <td><code>...</code></td>
+      <td>{new Date(0)}</td>
+    </tr>
     {/if}
   </tbody>
 
@@ -39,13 +44,49 @@
 
     // Initialization function
     async oncreate() {
-      const { repository_name } = this.get();
-      const response = await fetch(`/v2/` + repository_name + '/tags/list').then(r => r.json());
+      const tags = [];
+      const {
+        repository_name
+      } = this.get();
+      const response = await fetch(`/v2/` + repository_name + '/tags/list')
+        .then(r => r.json());
+      // response.tags.forEach(function(tag) {
+      for (var i = 0; i < response.tags.length; i++) {
+        const tag = response.tags[i];
+        const responseLate = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
+            "headers": {
+              "Accept": "application/vnd.docker.distribution.manifest.v2+json"
+            }
+          })
+          .then(r => r.json())
+          .then(function(tagManifest) {
+            return fetch('/v2/' + repository_name + '/blobs/' + tagManifest.config.digest, {
+                "headers": {
+                  "Accept": tagManifest.config.mediaType
+                }
+              })
+              .then(r => r.json())
+              .then(function(tagBlobData) {
+                var tag_element = {
+                  "tag_name": tag,
+                  "repository_name": repository_name,
+                  "created_at": new Date(tagBlobData.created)
+                };
+                console.log('inside', tag_element);
+                tags.push(tag_element);
+                return tag_element;
+              }) // fetch Tag Blob
+          }) // fetch Tag manifest
+      } // For loop
+      // }) // forEach
+      // }) // fetch Tag List
 
+      // tags.forEach(console.log);
+      tags.sort(function(a, b){return b.created_at - a.created_at});
       // Set values to component
       this.set({
-        tags: response.tags,
-        repository_name: repository_name
+        tags: tags,
+        // repository_name: repository_name
       });
     }
   }

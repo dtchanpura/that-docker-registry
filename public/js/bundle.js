@@ -667,75 +667,62 @@ var app = (function () {
 
 	function data$1() {
 	  return {
-	    created_at: new Date(0)
+	    tag: null
 	  }
 	}
 	async function oncreate$1() {
-	  const { tag, repository_name } = this.get();
-	  const responseMetadata = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
-	    "headers": {
-	      "Accept": "application/vnd.docker.distribution.manifest.v2+json"
-	    }
-	  }).then(r => r.json()).then(function(response) {
-	    return fetch('/v2/' + repository_name + '/blobs/' + response.config.digest, {
-	      "headers": {
-	        "Accept": response.config.mediaType
-	      }
-	    }).then(r => r.json());
-	  });
+	  const { tag } = this.get();
+	  // const { tag, repository_name } = this.get();
+	  // const responseMetadata = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
+	  //   "headers": {
+	  //     "Accept": "application/vnd.docker.distribution.manifest.v2+json"
+	  //   }
+	  // }).then(r => r.json()).then(function(response) {
+	  //   return fetch('/v2/' + repository_name + '/blobs/' + response.config.digest, {
+	  //     "headers": {
+	  //       "Accept": response.config.mediaType
+	  //     }
+	  //   }).then(r => r.json());
+	  // });
 	  this.set({
-	    created_at: new Date(responseMetadata.created)
+	    tag
+	    // created_at: new Date(responseMetadata.created)
 	  });
 	}
 	const file$2 = "src/Tag.html";
 
 	function create_main_fragment$2(component, ctx) {
-		var tr, td0, text0, text1, td1, code, text2, text3, td2, text4, current;
+		var tr, current;
+
+		function select_block_type(ctx) {
+			if (ctx.tag) return create_if_block$1;
+			return create_else_block$1;
+		}
+
+		var current_block_type = select_block_type(ctx);
+		var if_block = current_block_type(component, ctx);
 
 		return {
 			c: function create() {
 				tr = createElement("tr");
-				td0 = createElement("td");
-				text0 = createText(ctx.repository_name);
-				text1 = createText("\n  ");
-				td1 = createElement("td");
-				code = createElement("code");
-				text2 = createText(ctx.tag);
-				text3 = createText("\n  ");
-				td2 = createElement("td");
-				text4 = createText(ctx.created_at);
-				addLoc(td0, file$2, 1, 2, 7);
-				addLoc(code, file$2, 2, 6, 42);
-				addLoc(td1, file$2, 2, 2, 38);
-				addLoc(td2, file$2, 3, 2, 70);
+				if_block.c();
 				addLoc(tr, file$2, 0, 0, 0);
 			},
 
 			m: function mount(target, anchor) {
 				insert(target, tr, anchor);
-				append(tr, td0);
-				append(td0, text0);
-				append(tr, text1);
-				append(tr, td1);
-				append(td1, code);
-				append(code, text2);
-				append(tr, text3);
-				append(tr, td2);
-				append(td2, text4);
+				if_block.m(tr, null);
 				current = true;
 			},
 
 			p: function update(changed, ctx) {
-				if (changed.repository_name) {
-					setData(text0, ctx.repository_name);
-				}
-
-				if (changed.tag) {
-					setData(text2, ctx.tag);
-				}
-
-				if (changed.created_at) {
-					setData(text4, ctx.created_at);
+				if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+					if_block.p(changed, ctx);
+				} else {
+					if_block.d(1);
+					if_block = current_block_type(component, ctx);
+					if_block.c();
+					if_block.m(tr, null);
 				}
 			},
 
@@ -751,6 +738,92 @@ var app = (function () {
 				if (detach) {
 					detachNode(tr);
 				}
+
+				if_block.d();
+			}
+		};
+	}
+
+	// (6:2) {:else}
+	function create_else_block$1(component, ctx) {
+		var td;
+
+		return {
+			c: function create() {
+				td = createElement("td");
+				td.textContent = "...";
+				addLoc(td, file$2, 6, 2, 135);
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, td, anchor);
+			},
+
+			p: noop,
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(td);
+				}
+			}
+		};
+	}
+
+	// (2:2) {#if tag}
+	function create_if_block$1(component, ctx) {
+		var td0, text0_value = ctx.tag.repository_name, text0, text1, td1, code, text2_value = ctx.tag.tag_name, text2, text3, td2, text4_value = ctx.tag.created_at, text4;
+
+		return {
+			c: function create() {
+				td0 = createElement("td");
+				text0 = createText(text0_value);
+				text1 = createText("\n  ");
+				td1 = createElement("td");
+				code = createElement("code");
+				text2 = createText(text2_value);
+				text3 = createText("\n  ");
+				td2 = createElement("td");
+				text4 = createText(text4_value);
+				addLoc(td0, file$2, 2, 2, 19);
+				addLoc(code, file$2, 3, 6, 58);
+				addLoc(td1, file$2, 3, 2, 54);
+				addLoc(td2, file$2, 4, 2, 95);
+			},
+
+			m: function mount(target, anchor) {
+				insert(target, td0, anchor);
+				append(td0, text0);
+				insert(target, text1, anchor);
+				insert(target, td1, anchor);
+				append(td1, code);
+				append(code, text2);
+				insert(target, text3, anchor);
+				insert(target, td2, anchor);
+				append(td2, text4);
+			},
+
+			p: function update(changed, ctx) {
+				if ((changed.tag) && text0_value !== (text0_value = ctx.tag.repository_name)) {
+					setData(text0, text0_value);
+				}
+
+				if ((changed.tag) && text2_value !== (text2_value = ctx.tag.tag_name)) {
+					setData(text2, text2_value);
+				}
+
+				if ((changed.tag) && text4_value !== (text4_value = ctx.tag.created_at)) {
+					setData(text4, text4_value);
+				}
+			},
+
+			d: function destroy$$1(detach) {
+				if (detach) {
+					detachNode(td0);
+					detachNode(text1);
+					detachNode(td1);
+					detachNode(text3);
+					detachNode(td2);
+				}
 			}
 		};
 	}
@@ -763,9 +836,7 @@ var app = (function () {
 
 		init(this, options);
 		this._state = assign(data$1(), options.data);
-		if (!('repository_name' in this._state)) console.warn("<Tag> was created without expected data property 'repository_name'");
 		if (!('tag' in this._state)) console.warn("<Tag> was created without expected data property 'tag'");
-		if (!('created_at' in this._state)) console.warn("<Tag> was created without expected data property 'created_at'");
 		this._intro = !!options.intro;
 
 		this._fragment = create_main_fragment$2(this, this._state);
@@ -799,13 +870,49 @@ var app = (function () {
 	  };
 	}
 	async function oncreate$2() {
-	  const { repository_name } = this.get();
-	  const response = await fetch(`/v2/` + repository_name + '/tags/list').then(r => r.json());
+	  const tags = [];
+	  const {
+	    repository_name
+	  } = this.get();
+	  const response = await fetch(`/v2/` + repository_name + '/tags/list')
+	    .then(r => r.json());
+	  // response.tags.forEach(function(tag) {
+	  for (var i = 0; i < response.tags.length; i++) {
+	    const tag = response.tags[i];
+	    const responseLate = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
+	        "headers": {
+	          "Accept": "application/vnd.docker.distribution.manifest.v2+json"
+	        }
+	      })
+	      .then(r => r.json())
+	      .then(function(tagManifest) {
+	        return fetch('/v2/' + repository_name + '/blobs/' + tagManifest.config.digest, {
+	            "headers": {
+	              "Accept": tagManifest.config.mediaType
+	            }
+	          })
+	          .then(r => r.json())
+	          .then(function(tagBlobData) {
+	            var tag_element = {
+	              "tag_name": tag,
+	              "repository_name": repository_name,
+	              "created_at": new Date(tagBlobData.created)
+	            };
+	            console.log('inside', tag_element);
+	            tags.push(tag_element);
+	            return tag_element;
+	          }) // fetch Tag Blob
+	      }); // fetch Tag manifest
+	  } // For loop
+	  // }) // forEach
+	  // }) // fetch Tag List
 
+	  // tags.forEach(console.log);
+	  tags.sort(function(a, b){return b.created_at - a.created_at});
 	  // Set values to component
 	  this.set({
-	    tags: response.tags,
-	    repository_name: repository_name
+	    tags: tags,
+	    // repository_name: repository_name
 	  });
 	}
 	const file$3 = "src/ItemDetail.html";
@@ -824,8 +931,8 @@ var app = (function () {
 		}
 
 		var if_block_creators = [
-			create_if_block$1,
-			create_else_block$1
+			create_if_block$2,
+			create_else_block$2
 		];
 
 		var if_blocks = [];
@@ -939,21 +1046,46 @@ var app = (function () {
 		};
 	}
 
-	// (18:4) {:else}
-	function create_else_block$1(component, ctx) {
-		var text, current;
+	// (19:4) {:else}
+	function create_else_block$2(component, ctx) {
+		var tr, td0, text1, td1, code, text3, td2, text4_value = new ctx.Date(0), text4, current;
 
 		return {
 			c: function create() {
-				text = createText("loading tags...");
+				tr = createElement("tr");
+				td0 = createElement("td");
+				td0.textContent = "loading tags...";
+				text1 = createText("\n      ");
+				td1 = createElement("td");
+				code = createElement("code");
+				code.textContent = "...";
+				text3 = createText("\n      ");
+				td2 = createElement("td");
+				text4 = createText(text4_value);
+				addLoc(td0, file$3, 20, 6, 427);
+				addLoc(code, file$3, 21, 10, 462);
+				addLoc(td1, file$3, 21, 6, 458);
+				addLoc(td2, file$3, 22, 6, 490);
+				addLoc(tr, file$3, 19, 4, 416);
 			},
 
 			m: function mount(target, anchor) {
-				insert(target, text, anchor);
+				insert(target, tr, anchor);
+				append(tr, td0);
+				append(tr, text1);
+				append(tr, td1);
+				append(td1, code);
+				append(tr, text3);
+				append(tr, td2);
+				append(td2, text4);
 				current = true;
 			},
 
-			p: noop,
+			p: function update(changed, ctx) {
+				if ((changed.Date) && text4_value !== (text4_value = new ctx.Date(0))) {
+					setData(text4, text4_value);
+				}
+			},
 
 			i: function intro(target, anchor) {
 				if (current) return;
@@ -965,14 +1097,14 @@ var app = (function () {
 
 			d: function destroy$$1(detach) {
 				if (detach) {
-					detachNode(text);
+					detachNode(tr);
 				}
 			}
 		};
 	}
 
 	// (14:4) {#if tags}
-	function create_if_block$1(component, ctx) {
+	function create_if_block$2(component, ctx) {
 		var each_anchor, current;
 
 		var each_value = ctx.tags;
@@ -1014,7 +1146,7 @@ var app = (function () {
 			},
 
 			p: function update(changed, ctx) {
-				if (changed.tags || changed.repository_name) {
+				if (changed.tags) {
 					each_value = ctx.tags;
 
 					for (var i = 0; i < each_value.length; i += 1) {
@@ -1060,12 +1192,9 @@ var app = (function () {
 
 	// (15:4) {#each tags as tag}
 	function create_each_block$1(component, ctx) {
-		var current;
+		var text, current;
 
-		var tag_initial_data = {
-		 	tag: ctx.tag,
-		 	repository_name: ctx.repository_name
-		 };
+		var tag_initial_data = { tag: ctx.tag };
 		var tag = new Tag({
 			root: component.root,
 			store: component.store,
@@ -1075,17 +1204,18 @@ var app = (function () {
 		return {
 			c: function create() {
 				tag._fragment.c();
+				text = createText("\n    ");
 			},
 
 			m: function mount(target, anchor) {
 				tag._mount(target, anchor);
+				insert(target, text, anchor);
 				current = true;
 			},
 
 			p: function update(changed, ctx) {
 				var tag_changes = {};
 				if (changed.tags) tag_changes.tag = ctx.tag;
-				if (changed.repository_name) tag_changes.repository_name = ctx.repository_name;
 				tag._set(tag_changes);
 			},
 
@@ -1104,6 +1234,9 @@ var app = (function () {
 
 			d: function destroy$$1(detach) {
 				tag.destroy(detach);
+				if (detach) {
+					detachNode(text);
+				}
 			}
 		};
 	}
@@ -1115,9 +1248,8 @@ var app = (function () {
 		}
 
 		init(this, options);
-		this._state = assign(data$2(), options.data);
+		this._state = assign(assign({ Date : Date }, data$2()), options.data);
 		if (!('tags' in this._state)) console.warn("<ItemDetail> was created without expected data property 'tags'");
-		if (!('repository_name' in this._state)) console.warn("<ItemDetail> was created without expected data property 'repository_name'");
 		this._intro = !!options.intro;
 
 		this._fragment = create_main_fragment$3(this, this._state);
@@ -1171,8 +1303,8 @@ var app = (function () {
 		document.title = title_value = ctx.app_title;
 
 		var if_block_creators = [
-			create_if_block$2,
-			create_else_block$2
+			create_if_block$3,
+			create_else_block$3
 		];
 
 		var if_blocks = [];
@@ -1290,7 +1422,7 @@ var app = (function () {
 	}
 
 	// (18:2) {:else}
-	function create_else_block$2(component, ctx) {
+	function create_else_block$3(component, ctx) {
 		var current;
 
 		var itemdetail_initial_data = { repository_name: ctx.repository_name };
@@ -1340,7 +1472,7 @@ var app = (function () {
 	}
 
 	// (15:2) {#if isList}
-	function create_if_block$2(component, ctx) {
+	function create_if_block$3(component, ctx) {
 		var current;
 
 		var list = new List({
