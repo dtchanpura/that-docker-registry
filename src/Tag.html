@@ -7,37 +7,3 @@
   <td>...</td>
   {/if}
 </tr>
-<!-- <tr>
-  <td>{ repository_name }</td>
-  <td><code>{ tag }</code></td>
-  <td>{ created_at }</td>
-</tr> -->
-
-<script>
-  export default {
-    data() {
-      return {
-        tag: null
-      }
-    },
-    async oncreate() {
-      const { tag } = this.get();
-      // const { tag, repository_name } = this.get();
-      // const responseMetadata = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
-      //   "headers": {
-      //     "Accept": "application/vnd.docker.distribution.manifest.v2+json"
-      //   }
-      // }).then(r => r.json()).then(function(response) {
-      //   return fetch('/v2/' + repository_name + '/blobs/' + response.config.digest, {
-      //     "headers": {
-      //       "Accept": response.config.mediaType
-      //     }
-      //   }).then(r => r.json());
-      // });
-      this.set({
-        tag
-        // created_at: new Date(responseMetadata.created)
-      })
-    }
-  }
-</script>

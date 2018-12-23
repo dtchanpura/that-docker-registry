@@ -14,14 +14,17 @@
 	<div class="row">
 		{#if isList}
 		<!-- This is the list view for listing all repositories -->
-		<List on:select="itemDetails(event.repository_name)" />
+		<List on:version="version(event.version)" on:select="itemDetails(event.repository_name)" />
 		{:else}
 		<!-- This is the image detail view for giving more details about images -->
-		<ItemDetail on:select="close()" {repository_name} />
+		<ItemDetail on:version="version(event.version)" on:select="close()" {repository_name} />
 		{/if}
 	</div>
-</div>
 
+	<div class="row">
+	Version: <code>{version}</code>
+	</div>
+</div>
 
 <style>
 </style>
@@ -38,6 +41,11 @@
 				this.set({
 					isList: false,
 					repository_name: item
+				});
+			},
+			version(version) {
+				this.set({
+					version: version
 				});
 			},
 			close() {

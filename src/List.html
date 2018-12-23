@@ -1,7 +1,7 @@
 	<table class="u-full-width">
 		<thead>
 			<tr>
-				<th>Repository Name</th>
+				<th on:click="sort()">Tag <span style="line-height: 1px" class:hidden="descending == null" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
 				<th>Image Name</th>
 			</tr>
 		</thead>
@@ -14,7 +14,7 @@
 			<ItemRow on:select="fire('select', { repository_name })" {registry_origin} {repository_name} />
 			{/each}
 			{:else}
-			<p class='loading'>loading images...</p>
+			<tr><td colspan="2">loading images...</td></tr>
 			{/if}
 		</tbody>
 	</table>
@@ -28,17 +28,38 @@
 		data() {
 			return {
 				items: null,
-				registry_origin: null
+				registry_origin: null,
+				descending: null,
+				// order_by: null // Not needed as only one column is present
 			};
 		},
 		async oncreate() {
-			var item = null;
-			var registry_origin = null;
-			const response = await fetch(`/v2/_catalog`).then(r => r.json());
+			var server_version = "";
+			const { descending } = this.get();
+			const response = await fetch(`/v2/_catalog`).then(function(r) {
+			server_version = r.headers.get('Docker-Distribution-Api-Version');
+				return r.json();
+			});
+			var items = response.repositories;
+			this.fire('version', {version: server_version})
 			this.set({
 				registry_origin: window.location.host,
-				items: response.repositories
+				items: items
 			})
 		},
+		methods: {
+			sort() {
+				const { items, descending } = this.get();
+				if (!descending) {
+					items.sort();
+				} else {
+					items.sort().reverse();
+				}
+				this.set({
+					items: items,
+					descending: !descending
+				})
+			}
+		}
 	};
 </script>

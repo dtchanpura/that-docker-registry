@@ -27,34 +27,6 @@
 
 </table>
 <style>
-  .arrow-down {
-    display: inline-block;
-  	border-color: black transparent;
-  	border-style: solid;
-  	border-width: 8px 4px 0px 4px;
-  	height: 0px;
-  	width: 0px;
-  }
-
-  .arrow-up {
-    display: inline-block;
-  	border-color: black transparent;
-  	border-style: solid;
-  	border-width: 0px 4px 8px 4px;
-  	height: 0px;
-  	width: 0px;
-  }
-  .arrow-left {
-    display: inline-block;
-    border-color: transparent black;
-    border-style: solid;
-    border-width: 4px 8px 4px 0px;
-    /* height: 0px; */
-    /* width: 0px; */
-  }
-  .hidden {
-    display: none;
-  }
 </style>
 <script>
   import Tag from './Tag.html'
@@ -76,11 +48,17 @@
     // Initialization function
     async oncreate() {
       const tags = [];
+      var server_version = "";
       const {
         repository_name
       } = this.get();
       const response = await fetch(`/v2/` + repository_name + '/tags/list')
-        .then(r => r.json());
+        .then(function(r) {
+          server_version = r.headers.get('Docker-Distribution-Api-Version');
+          console.log(server_version);
+          return r.json();
+        });
+      // .then(r => r.json());
       // response.tags.forEach(function(tag) {
       for (var i = 0; i < response.tags.length; i++) {
         const tag = response.tags[i];
@@ -103,7 +81,6 @@
                   "repository_name": repository_name,
                   "created_at": new Date(tagBlobData.created)
                 };
-                console.log('inside', tag_element);
                 tags.push(tag_element);
                 return tag_element;
               }) // fetch Tag Blob
@@ -115,6 +92,9 @@
       // tags.forEach(console.log);
       // tags.sort(function(a, b){return b.created_at - a.created_at});
       // Set values to component
+      this.fire('version', {
+        version: server_version
+      });
       this.set({
         tags: tags,
         // repository_name: repository_name
@@ -128,13 +108,15 @@
         if (descending && column == order_by) {
           toggle = false
         }
-        tags.sort(function(a,b) { return toggle ? b[column] > a[column] : b[column] <= a[column]});
+        tags.sort(function(a, b) {
+          return toggle ? b[column] > a[column] : b[column] <= a[column]
+        });
         this.set({
           tags: tags,
           order_by: column,
           descending: toggle
         });
-        console.log(this.get());
+        // console.log(this.get());
       }
     }
   }
