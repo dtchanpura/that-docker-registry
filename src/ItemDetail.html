@@ -1,12 +1,12 @@
 <!-- Fire `select` event on click to go back. -->
-<span class='button' on:click="fire('select', null)" style="font-weight: bolder">←</span>
+<button class='button' on:click="fire('select', null)" style="font-weight: bolder"><span class="arrow-left"></span> Back</button>
 
 <table class="u-full-width">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Tag</th>
-      <th>Created at</th>
+      <th>Image Name</th>
+      <th on:click="sort('tag_name')">Tag <span style="line-height: 1px" class:hidden="order_by != 'tag_name'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
+      <th on:click="sort('created_at')">Created at <span class:hidden="order_by != 'created_at'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
     </tr>
   </thead>
 
@@ -26,7 +26,36 @@
   </tbody>
 
 </table>
+<style>
+  .arrow-down {
+    display: inline-block;
+  	border-color: black transparent;
+  	border-style: solid;
+  	border-width: 8px 4px 0px 4px;
+  	height: 0px;
+  	width: 0px;
+  }
 
+  .arrow-up {
+    display: inline-block;
+  	border-color: black transparent;
+  	border-style: solid;
+  	border-width: 0px 4px 8px 4px;
+  	height: 0px;
+  	width: 0px;
+  }
+  .arrow-left {
+    display: inline-block;
+    border-color: transparent black;
+    border-style: solid;
+    border-width: 4px 8px 4px 0px;
+    /* height: 0px; */
+    /* width: 0px; */
+  }
+  .hidden {
+    display: none;
+  }
+</style>
 <script>
   import Tag from './Tag.html'
 
@@ -38,7 +67,9 @@
     // Default values
     data() {
       return {
-        tags: null
+        tags: null,
+        descending: null,
+        order_by: null
       };
     },
 
@@ -82,12 +113,29 @@
       // }) // fetch Tag List
 
       // tags.forEach(console.log);
-      tags.sort(function(a, b){return b.created_at - a.created_at});
+      // tags.sort(function(a, b){return b.created_at - a.created_at});
       // Set values to component
       this.set({
         tags: tags,
         // repository_name: repository_name
       });
+    },
+
+    methods: {
+      sort(column) {
+        const { tags, descending, order_by } = this.get();
+        var toggle = true;
+        if (descending && column == order_by) {
+          toggle = false
+        }
+        tags.sort(function(a,b) { return toggle ? b[column] > a[column] : b[column] <= a[column]});
+        this.set({
+          tags: tags,
+          order_by: column,
+          descending: toggle
+        });
+        console.log(this.get());
+      }
     }
   }
 </script>
