@@ -12,7 +12,7 @@
     "svelte": "^2.13.5"
   },
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c; tar -C public -czvf build.tar.gz .",
     "autobuild": "rollup -c -w",
     "dev": "run-p start:dev autobuild",
     "start": "sirv public",
