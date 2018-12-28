@@ -9,6 +9,7 @@ This uses following parts:
 * [sveltejs/svelte](https://github.com/sveltejs/svelte)
 * [docker/distribution](https://github.com/docker/distribution)
 * [docker-registry](https://docs.docker.com/registry/spec/api/)
+* [dhg/Skeleton](https://github.com/dhg/Skeleton/)
 
 ## Building
 
