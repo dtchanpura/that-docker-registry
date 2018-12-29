@@ -1,0 +1,14 @@
+frontend:
+  image: "that-docker-registry.local/that-docker-registry:latest"
+  ports:
+    - 80:80
+  links:
+    - registry:registry
+  volumes:
+    - ./auth:/etc/nginx/conf.d
+    - ./auth/nginx.conf:/etc/nginx/nginx.conf:ro
+
+registry:
+  image: registry:2
+  volumes:
+    - ./data:/var/lib/registry
