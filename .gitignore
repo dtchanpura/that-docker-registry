@@ -2,3 +2,5 @@ node_modules
 npm-debug.log
 build.tar.gz
 /data
+auth/*.crt
+auth/*.key

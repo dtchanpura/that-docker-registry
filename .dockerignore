@@ -1,0 +1,10 @@
+node_modules
+public/bundle.*
+build.tar.gz
+.git
+/data
+/auth
+docker-compose.yml
+Dockerfile
+.dockerignore
+Makefile
