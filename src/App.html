@@ -1,5 +1,5 @@
 <svelte:head>
-	<title>{app_title}</title>
+	<title>{appTitle}</title>
 </svelte:head>
 
 <div class="container">
@@ -14,10 +14,10 @@
 	<div class="row">
 		{#if isList}
 		<!-- This is the list view for listing all repositories -->
-		<List on:version="version(event.version)" on:select="itemDetails(event.repository_name)" />
+		<List on:version="version(event.version)" on:select="itemDetails(event.repositoryName)" />
 		{:else}
 		<!-- This is the image detail view for giving more details about images -->
-		<ItemDetail on:version="version(event.version)" on:select="close()" {repository_name} />
+		<ItemDetail on:version="version(event.version)" on:select="close()" {repositoryName} />
 		{/if}
 	</div>
 
@@ -40,7 +40,7 @@
 				console.log(item);
 				this.set({
 					isList: false,
-					repository_name: item
+					repositoryName: item
 				});
 			},
 			version(version) {

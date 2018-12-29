@@ -8,10 +8,10 @@
 
 		<tbody>
 			{#if items}
-			{#each items as repository_name}
+			{#each items as repositoryName}
 
 			<!-- Forward select event from ItemRow back to App component -->
-			<ItemRow on:select="fire('select', { repository_name })" {registry_origin} {repository_name} />
+			<ItemRow on:select="fire('select', { repositoryName })" {registryOrigin} {repositoryName} />
 			{/each}
 			{:else}
 			<tr><td colspan="2">loading images...</td></tr>
@@ -28,22 +28,22 @@
 		data() {
 			return {
 				items: null,
-				registry_origin: null,
+				registryOrigin: null,
 				descending: null,
-				// order_by: null // Not needed as only one column is present
+				// orderBy: null // Not needed as only one column is present
 			};
 		},
 		async oncreate() {
-			var server_version = "";
+			var serverVersion = "";
 			const { descending } = this.get();
 			const response = await fetch(`/v2/_catalog`).then(function(r) {
-			server_version = r.headers.get('Docker-Distribution-Api-Version');
+			serverVersion = r.headers.get('Docker-Distribution-Api-Version');
 				return r.json();
 			});
 			var items = response.repositories;
-			this.fire('version', {version: server_version})
+			this.fire('version', {version: serverVersion})
 			this.set({
-				registry_origin: window.location.host,
+				registryOrigin: window.location.host,
 				items: items
 			})
 		},

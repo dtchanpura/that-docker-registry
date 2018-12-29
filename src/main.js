@@ -7,8 +7,8 @@ const app = new App({
 		subtitle: '',
 		item: null,
 		isList: true,
-		app_title: "That Docker Registry",
-		repository_name: null,
+		appTitle: "That Docker Registry",
+		repositoryName: null,
 		version: "0.0"
 	}
 });

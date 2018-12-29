@@ -5,8 +5,8 @@
   <thead>
     <tr>
       <th>Image Name</th>
-      <th on:click="sort('tag_name')">Tag <span style="line-height: 1px" class:hidden="order_by != 'tag_name'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
-      <th on:click="sort('created_at')">Created at <span class:hidden="order_by != 'created_at'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
+      <th on:click="sort('tagName')">Tag <span style="line-height: 1px" class:hidden="orderBy != 'tagName'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
+      <th on:click="sort('createdAt')">Created at <span class:hidden="orderBy != 'createdAt'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
     </tr>
   </thead>
 
@@ -14,7 +14,7 @@
     {#if tags}
     {#each tags as tag}
     <Tag {tag} />
-    <!-- <Tag {tag} {repository_name} /> -->
+    <!-- <Tag {tag} {repositoryName} /> -->
     {/each}
     {:else}
     <tr>
@@ -41,71 +41,68 @@
       return {
         tags: null,
         descending: null,
-        order_by: null
+        orderBy: null
       };
     },
 
     // Initialization function
     async oncreate() {
       const tags = [];
-      var server_version = "";
+      var serverVersion = "";
       const {
-        repository_name
+        repositoryName
       } = this.get();
-      const response = await fetch(`/v2/` + repository_name + '/tags/list')
+      const response = await fetch(`/v2/` + repositoryName + '/tags/list')
         .then(function(r) {
-          server_version = r.headers.get('Docker-Distribution-Api-Version');
-          console.log(server_version);
+          serverVersion = r.headers.get('Docker-Distribution-Api-Version');
+          console.log(serverVersion);
           return r.json();
         });
       // .then(r => r.json());
       // response.tags.forEach(function(tag) {
       for (var i = 0; i < response.tags.length; i++) {
         const tag = response.tags[i];
-        const responseLate = await fetch('/v2/' + repository_name + '/manifests/' + tag, {
+        const responseLate = await fetch('/v2/' + repositoryName + '/manifests/' + tag, {
             "headers": {
               "Accept": "application/vnd.docker.distribution.manifest.v2+json"
             }
           })
           .then(r => r.json())
           .then(function(tagManifest) {
-            return fetch('/v2/' + repository_name + '/blobs/' + tagManifest.config.digest, {
+            return fetch('/v2/' + repositoryName + '/blobs/' + tagManifest.config.digest, {
                 "headers": {
                   "Accept": tagManifest.config.mediaType
                 }
               })
               .then(r => r.json())
               .then(function(tagBlobData) {
-                var tag_element = {
-                  "tag_name": tag,
-                  "repository_name": repository_name,
-                  "created_at": new Date(tagBlobData.created)
+                var tagElement = {
+                  "tagName": tag,
+                  "repositoryName": repositoryName,
+                  "createdAt": new Date(tagBlobData.created)
                 };
-                tags.push(tag_element);
-                return tag_element;
+                tags.push(tagElement);
+                return tagElement;
               }) // fetch Tag Blob
           }) // fetch Tag manifest
       } // For loop
       // }) // forEach
       // }) // fetch Tag List
 
-      // tags.forEach(console.log);
-      // tags.sort(function(a, b){return b.created_at - a.created_at});
       // Set values to component
       this.fire('version', {
-        version: server_version
+        version: serverVersion
       });
       this.set({
         tags: tags,
-        // repository_name: repository_name
       });
     },
 
     methods: {
       sort(column) {
-        const { tags, descending, order_by } = this.get();
+        const { tags, descending, orderBy } = this.get();
         var toggle = true;
-        if (descending && column == order_by) {
+        if (descending && column == orderBy) {
           toggle = false
         }
         tags.sort(function(a, b) {
@@ -113,7 +110,7 @@
         });
         this.set({
           tags: tags,
-          order_by: column,
+          orderBy: column,
           descending: toggle
         });
         // console.log(this.get());

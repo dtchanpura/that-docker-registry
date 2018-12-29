@@ -17,7 +17,7 @@ This uses following parts:
 * Change parameters in src/main.js like
   * title
   * subtitle
-  * app_title
+  * appTitle
 
 * Install dependencies
   ```bash
