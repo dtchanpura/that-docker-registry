@@ -47,6 +47,8 @@ containers one with registry and other with this project frontend.
 * `make clean` can be useful for cleaning all intermediate images
 which are built as a part of building the final image.
 
+> While using docker-compose if you're asked for username and password use 
+> admin:ThatRegistryAdmin which is the default set in nginx.htpasswd
 ## Demo
 
 ![demo.gif](demo.gif)
