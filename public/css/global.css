@@ -26,3 +26,7 @@
 .hidden {
 	display: none;
 }
+
+.version-footer {
+	font-size: smaller;
+}
