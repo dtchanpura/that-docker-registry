@@ -34,6 +34,19 @@ This uses following parts:
   npm run dev
   ```
 
+## Building with Docker
+
+The project contains a Makefile which has all the required commands.
+
+* `make build` will create a docker image with
+that-docker-registry.local/that-docker-registry:latest image.
+
+* `make compose` will run `docker-compose up` which will create two
+containers one with registry and other with this project frontend.
+
+* `make clean` can be useful for cleaning all intermediate images
+which are built as a part of building the final image.
+
 ## Demo
 
 ![demo.gif](demo.gif)
