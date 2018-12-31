@@ -3,8 +3,48 @@
   <td>{ tag.repositoryName }</td>
   <td><code>{ tag.tagName }</code></td>
   <td title="{ tag.imageID }"><code>{ tag.imageID.substr(7,12) }</code></td>
-  <td>{ tag.createdAt }</td>
+  <td title="{ tag.createdAt }">{ tag.sinceTime }</td>
   {:else}
   <td>...</td>
   {/if}
 </tr>
+
+<script>
+  export default {
+    async oncreate() {
+      const {
+        tag
+      } = this.get();
+      // ref: https://stackoverflow.com/a/52810852/4414721
+      const now = new Date();
+      const times = [
+        ["second", 1],
+        ["minute", 60],
+        ["hour", 3600],
+        ["day", 86400],
+        ["week", 604800],
+        ["month", 2592000],
+        ["year", 31536000]
+      ];
+      var diff = Math.round((now - tag.createdAt) / 1000);
+      for (var t = 0; t < times.length; t++) {
+        if (diff < times[t][1]) {
+          if (t == 0) {
+            tag.sinceTime = "Just now";
+            this.set({
+              tag
+            });
+            return;
+          } else {
+            diff = Math.round(diff / times[t - 1][1]);
+            tag.sinceTime = diff + " " + times[t - 1][0] + (diff == 1 ? " ago" : "s ago");
+            this.set({
+              tag
+            });
+            return;
+          }
+        }
+      }
+    }
+  }
+</script>
