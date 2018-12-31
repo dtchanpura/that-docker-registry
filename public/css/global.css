@@ -30,3 +30,7 @@
 .version-footer {
 	font-size: smaller;
 }
+
+th {
+	cursor: default;
+}

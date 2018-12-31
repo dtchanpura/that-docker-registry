@@ -1801,7 +1801,7 @@ var app = (function () {
 	App.prototype._checkReadOnly = function _checkReadOnly(newState) {
 	};
 
-	var version = "1.2.0-dev";
+	var version = "1.3.0-dev";
 
 	const app = new App({
 		target: document.body,
