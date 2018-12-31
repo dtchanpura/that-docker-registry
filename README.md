@@ -51,8 +51,10 @@ which are built as a part of building the final image.
 > admin:ThatRegistryAdmin which is the default set in nginx.htpasswd
 ## Screenshots
 
+### List Images
 ![main](images/main_list.png)
 
+### List Tags
 ![tags](images/tags_list.png)
 
 Link to video: [here](https://vimeo.com/308921019).
