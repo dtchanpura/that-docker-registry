@@ -6,6 +6,7 @@
     <tr>
       <th>Image Name</th>
       <th on:click="sort('tagName')">Tag <span style="line-height: 1px" class:hidden="orderBy != 'tagName'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
+      <th on:click="sort('imageID')">Image ID <span class:hidden="orderBy != 'imageID'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
       <th on:click="sort('createdAt')">Created at <span class:hidden="orderBy != 'createdAt'" class:arrow-down="descending" class:arrow-up="!descending"></span></th>
     </tr>
   </thead>
@@ -20,6 +21,7 @@
     <tr>
       <td>loading tags...</td>
       <td><code>...</code></td>
+      <td><code>000000000000</code></td>
       <td>{new Date(0)}</td>
     </tr>
     {/if}
@@ -79,6 +81,7 @@
                 var tagElement = {
                   "tagName": tag,
                   "repositoryName": repositoryName,
+                  "imageID": tagManifest.config.digest, // full image ID
                   "createdAt": new Date(tagBlobData.created)
                 };
                 tags.push(tagElement);

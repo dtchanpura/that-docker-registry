@@ -2,6 +2,7 @@
   {#if tag}
   <td>{ tag.repositoryName }</td>
   <td><code>{ tag.tagName }</code></td>
+  <td title="{ tag.imageID }"><code>{ tag.imageID.substr(7,12) }</code></td>
   <td>{ tag.createdAt }</td>
   {:else}
   <td>...</td>
