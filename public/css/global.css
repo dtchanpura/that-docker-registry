@@ -34,3 +34,10 @@
 th {
 	cursor: default;
 }
+
+.detail-header {
+	text-transform: uppercase;
+	font-size: 1.4rem;
+	letter-spacing: .2rem;
+	font-weight: 600;
+}

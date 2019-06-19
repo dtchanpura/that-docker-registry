@@ -1,6 +1,25 @@
 <!-- Fire `select` event on click to go back. -->
 <button class='button' on:click="fire('select', null)" style="font-weight: bolder"><span class="arrow-left"></span> Back</button>
 
+<div class="row">
+  <div class="four columns">
+    <h5>{repositoryName}</h5>
+    <span class="detail-header">Last updated:</span>
+    <span title="{lastUpdatedOn.date}">{lastUpdatedOn.humanize}</span>
+  </div>
+  <div class="eight columns">
+    <h6 class="detail-header">Docker Commands</h6>
+    <pre>
+      <code>
+# Pulling the image
+docker pull {registryOrigin}/{repositoryName}:tagname
+# Pushing the image
+docker push {registryOrigin}/{repositoryName}:tagname
+      </code>
+    </pre>
+  </div>
+</div>
+
 <table class="u-full-width">
   <thead>
     <tr>
@@ -33,6 +52,32 @@
 <script>
   import Tag from './Tag.html'
 
+  function humanize(date) {
+    var sinceTime = null;
+    // ref: https://stackoverflow.com/a/52810852/4414721
+    const now = new Date();
+    const times = [
+      ["second", 1],
+      ["minute", 60],
+      ["hour", 3600],
+      ["day", 86400],
+      ["week", 604800],
+      ["month", 2592000],
+      ["year", 31536000]
+    ];
+    var diff = Math.round((now - date) / 1000);
+    for (var t = 0; t < times.length; t++) {
+      if (diff < times[t][1]) {
+        if (t == 0) {
+          return "Just now";
+        } else {
+          diff = Math.round(diff / times[t - 1][1]);
+          return diff + " " + times[t - 1][0] + (diff == 1 ? " ago" : "s ago");;
+        }
+      }
+    }
+  }
+
   export default {
     components: {
       Tag
@@ -43,7 +88,12 @@
       return {
         tags: null,
         descending: null,
-        orderBy: null
+        orderBy: null,
+        registryOrigin: window.location.host,
+        lastUpdatedOn: {
+          "date": null,
+          "humanize": "Never",
+        },
       };
     },
 
@@ -51,6 +101,7 @@
     async oncreate() {
       const tags = [];
       var serverVersion = "";
+      var lastUpdatedOn = new Date(0);
       const {
         repositoryName
       } = this.get();
@@ -82,8 +133,12 @@
                   "tagName": tag,
                   "repositoryName": repositoryName,
                   "imageID": tagManifest.config.digest, // full image ID
-                  "createdAt": new Date(tagBlobData.created)
+                  "createdAt": new Date(tagBlobData.created),
+                  "sinceTime": humanize(new Date(tagBlobData.created)),
                 };
+                if (lastUpdatedOn < tagElement["createdAt"]) {
+                  lastUpdatedOn = tagElement["createdAt"];
+                }
                 tags.push(tagElement);
                 return tagElement;
               }) // fetch Tag Blob
@@ -98,6 +153,7 @@
       });
       this.set({
         tags: tags,
+        lastUpdatedOn: {"date": lastUpdatedOn, "humanize": humanize(lastUpdatedOn)},
       });
     },
 
